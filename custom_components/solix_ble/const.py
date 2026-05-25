@@ -7,7 +7,6 @@ DOMAIN = "solix_ble"
 PORT_STATUS_STRINGS = ["Unknown", "Not connected", "Output", "Input"]
 
 CHARGING_STATUS_C300_STRINGS = ["Unknown", "Idle", "Discharging", "Charging"]
-
 CHARGING_STATUS_F3800_STRINGS = [
     "Unknown",
     "Idle",
@@ -29,4 +28,5 @@ class Models(Enum):
     C1000G2 = "C1000(X) Gen 2"
     F2000 = "F2000 (767)"
     F3800 = "F3800"
+    F1500 = "F1500 (A1772)"
     UNKNOWN = "Unknown"

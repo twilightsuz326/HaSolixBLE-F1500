@@ -1,4 +1,4 @@
-"""SolixBLE integration."""
+"""The SolixBLE integration."""
 
 import logging
 
@@ -23,6 +23,7 @@ from SolixBLE import (
 )
 
 from .const import Models
+from .f1500 import F1500
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,6 @@ type SolixBLEConfigEntry = ConfigEntry[SolixBLEDevice]
 
 def get_power_station_class(model: Models) -> SolixBLEDevice:
     """Return correct class for power station from model."""
-
     if model is Models.C300:
         return C300
     elif model is Models.C300DC:
@@ -46,16 +46,19 @@ def get_power_station_class(model: Models) -> SolixBLEDevice:
         return F2000
     elif model is Models.F3800:
         return F3800
+    elif model is Models.F1500:
+        return F1500
     elif model is Models.UNKNOWN:
         return Generic
     else:
-        raise NotImplementedError(f"Unexpected model. Got: '{type(model)}'!")
+        raise NotImplementedError("Unexpected model")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolixBLEConfigEntry) -> bool:
     """Set up the integration from a config entry."""
 
     assert entry.unique_id is not None
+
     address = entry.unique_id.upper()
     model = Models(entry.data["model"])
 
@@ -72,9 +75,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolixBLEConfigEntry) -> 
         raise ConfigEntryNotReady("The device was not found.")
 
     PowerStationClass = get_power_station_class(model)
-    if model is Models.UNKNOWN:
+    detected_name = (ble_device.name or entry.title or "").upper()
+    if model is Models.UNKNOWN and "F1500" in detected_name:
+        _LOGGER.debug("Promoting UNKNOWN model to F1500 based on name/title: %s", detected_name)
+        PowerStationClass = F1500
+
+    if model is Models.UNKNOWN and PowerStationClass is Generic:
         _LOGGER.warning(
-            f"The device '{ble_device.name}' is not supported and values will not be available to Home Assistant! "
+            f"The device '{ble_device.name}' is not supported and values will not be available to Home Assistant. "
             f"However when the integration is in debug mode the raw telemetry data and differences between status "
             f"updates will be printed in the log and this can be used to aid in adding support for new devices."
         )
@@ -98,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolixBLEConfigEntry) -> 
     entry.runtime_data = device
 
     await hass.config_entries.async_forward_entry_setups(
-        entry, [Platform.SENSOR, Platform.SWITCH]
+        entry, [Platform.SENSOR, Platform.SWITCH, Platform.SELECT]
     )
 
     return True
@@ -113,7 +121,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: SolixBLEConfigEntry) ->
     unload_ok_switch = await hass.config_entries.async_forward_entry_unload(
         entry, Platform.SWITCH
     )
+    unload_ok_select = await hass.config_entries.async_forward_entry_unload(
+        entry, Platform.SELECT
+    )
 
     await entry.runtime_data.disconnect()
 
-    return unload_ok_sensor and unload_ok_switch
+    return unload_ok_sensor and unload_ok_switch and unload_ok_select

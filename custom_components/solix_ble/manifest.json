@@ -1,6 +1,6 @@
 {
     "domain": "solix_ble",
-    "name": "Solix BLE",
+    "name": "Solix BLE F1500 Fork",
     "bluetooth": [
       {
         "connectable": true,
@@ -16,5 +16,5 @@
     "issue_tracker": "https://github.com/flip-dots/HaSolixBLE/issues",
     "requirements": ["SolixBLE==3.5.0"],
     "loggers": ["bleak", "SolixBLE"],
-    "version": "3.3.0"
+    "version": "3.3.0-f1500.1"
 }
