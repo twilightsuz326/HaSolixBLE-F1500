@@ -39,9 +39,6 @@ class F1500(Generic):
     _PUSH_TELEMETRY_COMMANDS: set[str] = {"4402"}
     _REQUEST_TELEMETRY_COMMAND: str = "c840"
 
-    def _has_key(self, key: str) -> bool:
-        return self._data is not None and key in self._data
-
     async def connect(self, max_attempts: int = 3, run_callbacks: bool = True) -> bool:
         _LOGGER.debug(
             "F1500 connect start: address=%s max_attempts=%s run_callbacks=%s",
@@ -176,30 +173,6 @@ class F1500(Generic):
         return self._parse_int("c1", begin=1)
 
     @property
-    def battery_percentage_expansion(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        return self._parse_int("c2", begin=1)
-
-    @property
-    def battery_health(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        return self._parse_int("c3", begin=1)
-
-    @property
-    def battery_health_expansion(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        return self._parse_int("c4", begin=1)
-
-    @property
-    def num_expansion(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        return self._parse_int("c5", begin=1)
-
-    @property
     def charging_status(self) -> str:
         if self._data is None:
             return DEFAULT_METADATA_STRING
@@ -217,24 +190,6 @@ class F1500(Generic):
         if power_out > power_in:
             return ChargingStatus.DISCHARGING.name.lower()
         return ChargingStatus.IDLE.name.lower()
-
-    @property
-    def max_battery_percentage(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        if self._has_key("d9"):
-            return self._parse_int("d9", begin=4, end=5)
-        if self._has_key("c0"):
-            return self._parse_int("c0", begin=1)
-        return DEFAULT_METADATA_INT
-
-    @property
-    def min_battery_percentage(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        if self._has_key("d9"):
-            return self._parse_int("d9", begin=5, end=6)
-        return DEFAULT_METADATA_INT
 
     @property
     def power_out(self) -> int:
@@ -329,10 +284,6 @@ class F1500(Generic):
         return PortStatus(self._parse_int("bc", begin=1))
 
     @property
-    def software_version_expansion(self) -> str:
-        return self._parse_version("b9")
-
-    @property
     def serial_number(self) -> str:
         if self._data is None:
             return DEFAULT_METADATA_STRING
@@ -343,12 +294,6 @@ class F1500(Generic):
         if self._data is None:
             return DEFAULT_METADATA_INT
         return self._parse_int("bd", begin=1, signed=True)
-
-    @property
-    def temperature_expansion(self) -> int:
-        if self._data is None:
-            return DEFAULT_METADATA_INT
-        return self._parse_int("be", begin=1, signed=True)
 
     @property
     def light(self) -> LightStatus:

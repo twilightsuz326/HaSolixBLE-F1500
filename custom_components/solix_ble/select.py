@@ -9,6 +9,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from SolixBLE.states import DisplayTimeout, LightStatus
 
 from .f1500 import F1500
@@ -50,7 +51,7 @@ async def async_setup_entry(
                 device=device,
                 name="Light",
                 attribute="light",
-                state_attribute="light",
+                state_attribute=None,
                 setter_name="set_light_mode",
                 options=LIGHT_OPTIONS,
             )
@@ -79,7 +80,7 @@ async def async_setup_entry(
     async_add_entities(selects)
 
 
-class SolixSelectEntity(SelectEntity):
+class SolixSelectEntity(SelectEntity, RestoreEntity):
     """Representation of a Solix BLE select."""
 
     _attr_has_entity_name = True
@@ -111,6 +112,11 @@ class SolixSelectEntity(SelectEntity):
 
     async def async_added_to_hass(self) -> None:
         self._device.add_callback(self._state_change_callback)
+        if self._state_attribute is None:
+            last_state = await self.async_get_last_state()
+            if last_state is not None and last_state.state in self._options_map:
+                self._optimistic_option = last_state.state
+                self._attr_current_option = last_state.state
 
     async def async_will_remove_from_hass(self) -> None:
         self._device.remove_callback(self._state_change_callback)

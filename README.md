@@ -11,7 +11,6 @@ Home Assistant custom integration fork for `solix_ble`, focused on improving sup
   - AC/DC/USB/solar power readings
   - remaining time
   - charging-status estimate
-  - max/min battery percentage candidates
 - Additional F1500 controls:
   - AC output switch
   - DC output switch
